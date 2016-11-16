@@ -1,47 +1,9 @@
-// var Cat=function (name,pic) {
-//     this.name=name;
-//     this.pic=pic;
-//     this.cnt=0;
-// };
-
-// var cats=[
-//     new Cat('first cat','cat1.jpg'),
-//     new Cat('second cat','cat2.jpg'),
-//     new Cat('cute cat','cat3.jpg'),
-//     new Cat('lovely cat','cat4.jpg'),
-//     new Cat('small cat','cat5.jpg'),
-// ];
-
-// $('#cat').css('display','none');
-// for(var i=0;i<cats.length;i++){
-//     (function (cat) {
-//         var $li=$('<li>'+cat.name+'</li>');
-//         $('#list').append($li);
-//         // var $fig=$('<figure></figure>');
-//         // var $name=$('<p></p>').text(cat.name);
-//         // var $pic=$('<img src="images/'+cat.pic+'" alt="a cute cat" width="300" height="300">');
-//         // var $cnt=$('<p></p>').text(cat.cnt);
-//         // $fig.append($name,$pic,$cnt);
-//         // $('#display').append($fig);
-//         // $($fig).css("display","none");
-//         var $pic=$('<img src="images/'+cat.pic+'" alt="a cute cat" id="pic" width="300" height="300">');
-//         $li.click(function () {
-//             $('#cat').css('display','block');
-//             $('#name').text(cat.name);
-//             $('#pic').remove();
-//             $('#name').after($pic);
-//             $('#counter').text(cat.cnt);
-//         });
-//         $pic.click(function () {
-//             $('#counter').text(++cat.cnt);
-//         });
-//     })(cats[i]);
-// }
 
 /* ======= Model ======= */
 
 var model={
     currentCat:null,
+    showAdmin:false,
     cats:[
         {
             clickCount:0,
@@ -87,6 +49,7 @@ var octopus={
         // tell our views to initialize
         catListView.init();
         catView.init();
+        adminView.init();
     },
 
     getCurrentCat:function(){
@@ -106,6 +69,33 @@ var octopus={
     incrementCounter: function() {
         model.currentCat.clickCount++;
         catView.render();
+    },
+
+    //show the admin area
+    showAdmin:function (show) {
+        model.showAdmin=true;
+        adminView.render();
+    },
+
+    // save the modification of cat data and hide the admin area
+    save:function (newName,newImg,newCount) {
+        model.currentCat.name=newName;
+        model.currentCat.imgSrc=newImg;
+        model.currentCat.clickCount=newCount;
+        catView.render();
+        catListView.render();
+        model.showAdmin=false;
+        adminView.render();
+    },
+
+    // hide the admin area
+    cancel:function () {
+        model.showAdmin=false;
+        adminView.render();
+    },
+
+    getAdmin:function () {
+        return model.showAdmin;
     }
 };
 
@@ -173,6 +163,42 @@ var catListView={
             // finally, add the element to the list
             this.$catList.append($li);
         },this);
+    }
+};
+
+var adminView={
+    init:function () {
+        // store pointers to our DOM elements for easy access later
+        this.$adminForm=$('#admin-form');
+        var $adminBtn=$('#admin-btn');
+        var $newName=$('#new-name');
+        var $newImg=$('#new-img');
+        var $newCount=$('#new-count');
+        var $cancel=$('#cancel');
+
+        // on submit, save the data
+        this.$adminForm.submit(function (e) {
+            octopus.save($newName.val(),$newImg.val(),$newCount.val());
+            e.preventDefault();
+        });
+
+        //on click admin,show the admin area and clear the input values
+        $adminBtn.click(function () {
+            octopus.showAdmin();
+            $newName.val('');
+            $newImg.val('');
+            $newCount.val('');
+        });
+
+        $cancel.click(function () {
+            octopus.cancel();
+        });
+
+        adminView.render();
+    },
+    render:function () {
+        var show=octopus.getAdmin()?"block":"none";
+        this.$adminForm.css("display",show);
     }
 };
 
